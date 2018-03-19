@@ -1,0 +1,165 @@
+import java.util.ArrayList;
+
+public class HashTable<K, V> implements HashTableADT<K, V> {
+    /* Instance variables and constructors
+     */
+	private int capacity;
+	private int initCapacity;
+	private double loadFactor;
+	private int size;
+	private K key;
+	private V value; 
+	
+	private ArrayList<HashNode<K,V>> hashTable;
+	
+	class HashNode<K, V> { 
+		K key;
+		V value;
+		
+		HashNode<K, V> next;
+		
+		public HashNode(K key, V value) {
+			this.key = key;
+			this.value = value; 	
+		}
+	}
+
+	public HashTable(int initialCapacity, double loadFactor) {
+
+		this.capacity = initialCapacity;
+		this.initCapacity = initialCapacity;
+		this.loadFactor = loadFactor; 
+
+	}
+	public HashTable() {
+		hashTable = new ArrayList<>();
+		
+		for (int i = 0; i < this.capacity; i++) {
+			hashTable.add(null);
+		}
+	}
+	
+	private int getIndex(K key) {
+		int hashCode = key.hashCode();
+		int index = hashCode / this.capacity;
+		return index;
+	}
+	
+	private int handleCollision(K key) {
+		int hashCode = key.hashCode();
+		int index = hashCode % this.capacity;
+		int newIndex;
+		
+		while (hashTable.get(index).value != null) {
+			index++;
+		}
+		newIndex = index;
+		return newIndex;
+	}
+	
+    @Override
+    public V put(K key, V value) {
+        //TODO: Implement put method - using efficient algorithm
+    		if (value == null) {
+    			throw new NullPointerException();
+    		}
+    		int index = handleCollision(key);
+    		HashNode<K,V> head = hashTable.get(index);
+    		
+    		while (head != null ) {
+    			if (head.key.equals(key)) {
+    				head.value = value;
+    				return value;
+    			}
+    			head = head.next;
+    		}
+    		this.size++;
+    		head = hashTable.get(index);
+    		HashNode<K,V> newNode = new HashNode<K,V>(key, value);
+    		newNode.next = head;
+    		hashTable.set(index, newNode);
+    		
+    		// resize the hash table if the load factor becomes too large
+    		if (((1.0*size) / this.capacity) >= this.loadFactor) {
+    			ArrayList<HashNode<K,V>> temp = hashTable;
+    			hashTable = new ArrayList<>();
+    			this.capacity = this.capacity * 2;
+    			size = 0;
+    			for (int i =0; i < this.capacity; i++) {
+    				hashTable.add(null);
+    			}
+    			for (HashNode<K,V> headNode : temp) {
+    				while (headNode != null) {
+    					put(headNode.key, headNode.value);
+    					headNode = headNode.next;
+    				}
+    			}
+    		}
+    		return value;
+    }
+
+    @Override
+    public void clear() {
+       //TODO: Implement this method
+    		if (isEmpty()) {
+    			hashTable.clear();
+    		}
+    		this.capacity = this.initCapacity;
+    }
+
+    @Override
+    public V get(K key) {
+        //TODO: Implement the get method
+		int  index = getIndex(key);
+		HashNode<K,V> head = hashTable.get(index);
+		
+		while (head != null) {
+			if (head.key.equals(key)) {
+				return head.value;
+			}
+			head = head.next;
+		}
+    return null;    
+    }
+
+    @Override
+    public boolean isEmpty() {
+        //TODO: Implement the method
+        return size == 0;
+    }
+
+    @Override
+    public V remove(K key) {
+       //TODO: Implement the remove method
+    		int index = getIndex(key);
+    		
+    		HashNode<K,V> head = hashTable.get(index);
+    		
+    		HashNode<K,V> prev = null;
+    		while (head != null) {
+    			if (head.key.equals(key)) {
+    				break;
+    			}
+    			prev = head;
+    			head = head.next;
+    		}
+    		
+    		if (head == null) {
+    			return null;
+    		}
+    		size--;
+    		
+    		if (prev != null) {
+    			prev.next = head.next;
+    		} else {
+    			hashTable.set(index, head.next);
+    		}
+        return head.value;
+    }
+
+    @Override
+    public int size() {
+        //TODO: Implement this method
+        return this.size;
+    }
+}
